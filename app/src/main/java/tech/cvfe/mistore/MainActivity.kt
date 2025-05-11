@@ -1,11 +1,13 @@
 package tech.cvfe.mistore
 
+import android.content.pm.ActivityInfo
 import android.os.Bundle
 import android.util.Log
-import android.widget.ImageView
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -13,8 +15,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -23,33 +28,86 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
 import tech.cvfe.mistore.ui.theme.MistoreTheme
 
 
 const val TAG = "MainActivity"
 
 class MainActivity : ComponentActivity() {
+    private var isFullScreen = false
+    private var statusBarHeight: Float = 0f;
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
+
         setContent {
             MistoreTheme {
                 Surface(
                     color = MaterialTheme.colorScheme.surface,
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(top = statusBarHeight.dp)
                 ) {
-                    Column {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .verticalScroll(rememberScrollState())
+                            .systemBarsPadding()
+                    ) {
                         MessageList(title = "消息列表")
+                        OrientationButton(
+                            onTogglePortrait = ::onTogglePortrait,
+                            onToggleLandscape = ::onToggleLandscape,
+                            onUnsetOrientation = ::onUnsetOrientation,
+                            toggleFullScreen = ::toggleFullScreen
+                        )
                     }
                 }
             }
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        statusBarHeight = SystemBarUtils.getStatusBarHeightDp(this);
+        Log.d(TAG, "onResume: statusBarHeight: $statusBarHeight")
+    }
+
+    private fun toggleFullScreen() {
+        val windowInsetsController =
+            WindowCompat.getInsetsController(window, window.decorView)
+        if (isFullScreen) {
+            Log.d(TAG, "toggleFullScreen: hide")
+            windowInsetsController.show(WindowInsetsCompat.Type.systemBars())
+            isFullScreen = false
+        } else {
+            Log.d(TAG, "toggleFullScreen: show")
+            windowInsetsController.hide(WindowInsetsCompat.Type.systemBars())
+            isFullScreen = true;
+        }
+        val h = SystemBarUtils.getStatusBarHeightDp(context = this)
+        val n = SystemBarUtils.getNavigationBarHeightDp(context = this)
+        Log.d(TAG, "getStatusBarHeightDp: ${h}-${n}")
+    }
+
+    fun onTogglePortrait() {
+        Log.d(TAG, "onTogglePortrait: PORTRAIT")
+        this.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT;
+    }
+
+    fun onToggleLandscape() {
+        Log.d(TAG, "onTogglePortrait: LANDSCAPE")
+        this.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE;
+    }
+
+    fun onUnsetOrientation() {
+        Log.d(TAG, "onUnsetOrientation: ")
+        this.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED;
     }
 }
 
@@ -62,12 +120,47 @@ fun MessageList(title: String) {
         style = MaterialTheme.typography.titleLarge,
         modifier = Modifier.padding(horizontal = 10.dp)
     )
-    MsgCard(
-        message = Message(
-            "Kotlin 开发",
-            "是的我是第几卡号 sd 卡恢复尽快哈卡号副卡收款方好服卡上卡号放假看啥"
+
+    repeat(20) { i ->
+        MsgCard(
+            message = Message(
+                "Kotlin 开发",
+                "是的我是第几卡号 sd 卡恢复尽快哈卡号副卡收款方好服卡上卡号放假看啥"
+            )
         )
-    )
+        Spacer(modifier = Modifier.height(8.dp))
+    }
+
+}
+
+@Composable
+fun OrientationButton(
+    onToggleLandscape: () -> Unit,
+    onTogglePortrait: () -> Unit,
+    onUnsetOrientation: () -> Unit,
+    toggleFullScreen: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .background(Color.Magenta)
+            .fillMaxWidth()
+    ) {
+        Button(onClick = onToggleLandscape) {
+            Text(text = "横屏")
+        }
+        Spacer(modifier = Modifier.padding(horizontal = 8.dp))
+        Button(onClick = onTogglePortrait) {
+            Text(text = "竖屏")
+        }
+        Spacer(modifier = Modifier.padding(horizontal = 8.dp))
+        Button(onClick = onUnsetOrientation) {
+            Text(text = "复原")
+        }
+        Spacer(modifier = Modifier.padding(horizontal = 8.dp))
+        Button(onClick = toggleFullScreen) {
+            Text(text = "全屏")
+        }
+    }
 }
 
 @Composable

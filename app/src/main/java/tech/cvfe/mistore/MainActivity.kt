@@ -1,5 +1,6 @@
 package tech.cvfe.mistore
 
+import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.os.Bundle
 import android.util.Log
@@ -36,11 +37,12 @@ import androidx.core.view.WindowInsetsCompat
 import tech.cvfe.mistore.ui.theme.MistoreTheme
 
 
-const val TAG = "MainActivity"
-
 class MainActivity : ComponentActivity() {
+    companion object {
+        const val TAG = "MainActivity"
+    }
     private var isFullScreen = false
-    private var statusBarHeight: Float = 0f;
+    private var statusBarHeight: Float = 0f
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -66,6 +68,9 @@ class MainActivity : ComponentActivity() {
                             onUnsetOrientation = ::onUnsetOrientation,
                             toggleFullScreen = ::toggleFullScreen
                         )
+                        Button(
+                            onClick = ::openFilePage
+                        ) { Text(text = "文件页面") }
                     }
                 }
             }
@@ -74,7 +79,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
-        statusBarHeight = SystemBarUtils.getStatusBarHeightDp(this);
+        statusBarHeight = SystemBarUtils.getStatusBarHeightDp(this)
         Log.d(TAG, "onResume: statusBarHeight: $statusBarHeight")
     }
 
@@ -88,7 +93,7 @@ class MainActivity : ComponentActivity() {
         } else {
             Log.d(TAG, "toggleFullScreen: show")
             windowInsetsController.hide(WindowInsetsCompat.Type.systemBars())
-            isFullScreen = true;
+            isFullScreen = true
         }
         val h = SystemBarUtils.getStatusBarHeightDp(context = this)
         val n = SystemBarUtils.getNavigationBarHeightDp(context = this)
@@ -97,17 +102,23 @@ class MainActivity : ComponentActivity() {
 
     fun onTogglePortrait() {
         Log.d(TAG, "onTogglePortrait: PORTRAIT")
-        this.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT;
+        this.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
     }
 
     fun onToggleLandscape() {
         Log.d(TAG, "onTogglePortrait: LANDSCAPE")
-        this.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE;
+        this.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
     }
 
     fun onUnsetOrientation() {
         Log.d(TAG, "onUnsetOrientation: ")
-        this.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED;
+        this.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+    }
+
+    fun openFilePage() {
+        Log.d(TAG, "openFilePage: ")
+        val intent = Intent(this@MainActivity, StorageActivity::class.java)
+        startActivity(intent)
     }
 }
 
@@ -121,7 +132,7 @@ fun MessageList(title: String) {
         modifier = Modifier.padding(horizontal = 10.dp)
     )
 
-    repeat(20) { i ->
+    repeat(20) { _ ->
         MsgCard(
             message = Message(
                 "Kotlin 开发",
